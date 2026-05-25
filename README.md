@@ -1,1 +1,1 @@
-# MiniSistemaRRHH
+# Proyecto IA
