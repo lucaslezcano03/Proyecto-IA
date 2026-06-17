@@ -133,3 +133,137 @@ class AgenteEntrenador:
 # Inicialización y ejecución
 entrenador = AgenteEntrenador('players_clean.csv')
 entrenador.ejecutar_flujo()
+
+"""## Agente 3: Comunicador
+Este agente utiliza Inteligencia Artificial Generativa para transformar las métricas técnicas en un reporte ejecutivo profesional para la toma de decisiones.
+"""
+
+import json
+import os
+import sys
+import pandas as pd
+import requests
+
+class AgenteComunicador:
+    def __init__(self, csv_path, json_path):
+        self.csv_path = csv_path
+        self.json_path = json_path
+        self.contexto_dataset = ""
+        self.contexto_modelos = ""
+        self.api_key = self._obtener_api_key()
+
+    def _obtener_api_key(self):
+        """Busca la API Key en variables de entorno del sistema o secretos de Colab"""
+        # 1. Intento de lectura en entorno estandar (PC local / Servidor)
+        api_key = os.environ.get('GOOGLE_API_KEY')
+        if api_key:
+            return api_key
+
+        # 2. Intento de lectura en entorno Google Colab
+        try:
+            from google.colab import userdata
+            return userdata.get('GOOGLE_API_KEY')
+        except (ImportError, Exception):
+            pass
+
+        return None
+
+    def consolidar_memoria_agentes(self):
+        """Carga la persistencia de datos de los agentes previos"""
+        if not os.path.exists(self.csv_path):
+            print(f"Error critico: No se encontro el archivo de datos '{self.csv_path}'.")
+            return False
+
+        if not os.path.exists(self.json_path):
+            print(f"Error critico: No se encontro el archivo de metricas '{self.json_path}'.")
+            return False
+
+        try:
+            df = pd.read_csv(self.csv_path)
+            filas, columnas = df.shape
+
+            col_valor = 'market_value_in_eur'
+            resumen_valores = ""
+
+            if col_valor in df.columns:
+                valor_max = df[col_valor].max()
+                valor_promedio = df[col_valor].mean()
+                resumen_valores = f"El valor maximo registrado es {valor_max:.2f} y el promedio es {valor_promedio:.2f}. "
+
+            self.contexto_dataset = (
+                f"El Agente 1 proceso el archivo y genero un dataset con {filas} filas. "
+                f"Estadisticas de mercado: {resumen_valores}"
+            )
+
+            with open(self.json_path, 'r', encoding='utf-8') as f:
+                metricas_json = json.load(f)
+                self.contexto_modelos = json.dumps(metricas_json, indent=2)
+
+            return True
+        except Exception as e:
+            print(f"Error al consolidar la informacion de los agentes: {e}")
+            return False
+
+    def ejecutar_consulta_llm(self, pregunta_usuario):
+        if not self.api_key:
+            return "Error: API Key no detectada. Configure la variable GOOGLE_API_KEY."
+
+        url = f"https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key={self.api_key}"
+
+        prompt_sistema = f"""
+        Actua como el Agente 3 (Comunicador) de un sistema de IA experto en Transfermarkt.
+        Tu objetivo es responder preguntas basadas en el contexto del proyecto.
+
+        CONTEXTO DEL DATASET:
+        {self.contexto_dataset}
+
+        RESULTADOS DE MODELOS:
+        {self.contexto_modelos}
+
+        INSTRUCCIONES:
+        1. Si preguntan por el 'mas caro' o 'mejor valuado', responde utilizando los datos maximos provistos en el contexto ({self.contexto_dataset}).
+        2. Explica brevemente que los nombres de jugadores no estan disponibles porque se normalizaron y anonimizaron en identificadores numericos para el correcto entrenamiento del Agente 2.
+        3. Mantente profesional, formal y en español. No utilices emoticonos ni estructuras artificiales.
+
+        Pregunta del usuario: {pregunta_usuario}
+        """
+
+        payload = {"contents": [{"parts": [{"text": prompt_sistema}]}]}
+        headers = {"Content-Type": "application/json"}
+
+        try:
+            respuesta = requests.post(url, json=payload, headers=headers)
+            if respuesta.status_code == 200:
+                return respuesta.json()['candidates'][0]['content']['parts'][0]['text']
+            else:
+                return f"Error {respuesta.status_code}: {respuesta.text}"
+        except Exception as e:
+            return f"Fallo de red al conectar con el modelo: {e}"
+
+    def iniciar_interfaz(self):
+        if not self.consolidar_memoria_agentes():
+            return
+
+        print("==================================================")
+        print("INTERFAZ DE CONSULTA AGENTE 3 ACTIVADA")
+        print("==================================================")
+        print("Escribe tu pregunta o 'salir' para finalizar.\n")
+
+        while True:
+            try:
+                pregunta = input("Pregunta: ")
+                if pregunta.lower().strip() in ['salir', 'exit', 'quit']:
+                    print("Cerrando modulo del Agente 3.")
+                    break
+                if not pregunta.strip():
+                    continue
+
+                respuesta = self.ejecutar_consulta_llm(pregunta)
+                print(f"Respuesta:\n{respuesta}\n")
+            except (KeyboardInterrupt, EOFError):
+                print("\nPrograma interrumpido. Saliendo correctamente.")
+                break
+
+if __name__ == "__main__":
+    comunicador = AgenteComunicador('players_clean.csv', 'resultados_entrenamiento.json')
+    comunicador.iniciar_interfaz()
