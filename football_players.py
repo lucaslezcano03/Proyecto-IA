@@ -62,3 +62,74 @@ if __name__ == "__main__":
 
     print("\nVista previa del dataset normalizado:")
     print(pd.read_csv('players_clean.csv').head())
+
+    """## Agente 2: Entrenador
+Este agente entrena modelos de regresión para predecir el valor de mercado de los jugadores y selecciona el mejor rendimiento.
+"""
+
+import pandas as pd
+import json
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.metrics import r2_score, mean_absolute_error
+
+class AgenteEntrenador:
+    def __init__(self, data_path):
+        self.data_path = data_path
+        self.df = None
+        self.X_train, self.X_test, self.y_train, self.y_test = [None] * 4
+        self.results = {}
+
+    def preparar_datos(self):
+        self.df = pd.read_csv(self.data_path)
+        y = self.df['market_value_in_eur']
+        X = self.df.drop(columns=['market_value_in_eur'])
+        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(
+            X, y, test_size=0.2, random_state=42
+        )
+
+    def entrenar_y_evaluar(self):
+        modelos = {
+            'LinearRegression': LinearRegression(),
+            'RandomForest': RandomForestRegressor(n_estimators=100, random_state=42)
+        }
+
+        for nombre, modelo in modelos.items():
+            # Entrenamiento
+            modelo.fit(self.X_train, self.y_train)
+            # Predicción
+            preds = modelo.predict(self.X_test)
+            # Métricas
+            r2 = r2_score(self.y_test, preds)
+            mae = mean_absolute_error(self.y_test, preds)
+
+            self.results[nombre] = {'R2': r2, 'MAE': mae}
+
+    def seleccionar_y_guardar(self):
+        # Determinar el ganador basado en R2
+        mejor_modelo = max(self.results, key=lambda x: self.results[x]['R2'])
+
+        metadata = {
+            'mejor_modelo': mejor_modelo,
+            'metricas_ganador': self.results[mejor_modelo],
+            'comparativa_completa': self.results
+        }
+
+        with open('resultados_entrenamiento.json', 'w') as f:
+            json.dump(metadata, f, indent=4)
+
+        # Mostrar tabla comparativa
+        print("--- Comparativa de Modelos ---")
+        print(pd.DataFrame(self.results).T)
+        print(f"\nModelo Ganador: {mejor_modelo}")
+        print('✓ Agente 2: Modelos entrenados y evaluados correctamente')
+
+    def ejecutar_flujo(self):
+        self.preparar_datos()
+        self.entrenar_y_evaluar()
+        self.seleccionar_y_guardar()
+
+# Inicialización y ejecución
+entrenador = AgenteEntrenador('players_clean.csv')
+entrenador.ejecutar_flujo()
