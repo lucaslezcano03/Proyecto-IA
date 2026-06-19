@@ -43,8 +43,8 @@ class AgenteNormalizador:
         cols_to_encode = [c for c in ['position', 'foot', 'domestic_league_code'] if c in self.df.columns]
         self.df = pd.get_dummies(self.df, columns=cols_to_encode)
 
-        # 4. Escalado (StandardScaler)
-        cols_to_scale = [c for c in ['market_value_in_eur', 'height_in_cm', 'age'] if c in self.df.columns]
+        # 4. Escalado (CORREGIDO: Se quitó market_value_in_eur de aquí)
+        cols_to_scale = [c for c in ['height_in_cm', 'age'] if c in self.df.columns]
         scaler = StandardScaler()
         if cols_to_scale:
             self.df[cols_to_scale] = scaler.fit_transform(self.df[cols_to_scale])
