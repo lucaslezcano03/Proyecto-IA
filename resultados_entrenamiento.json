@@ -1,0 +1,17 @@
+{
+    "mejor_modelo": "RandomForest",
+    "metricas_ganador": {
+        "R2": 0.8488010204822306,
+        "MAE": 0.0792330056798653
+    },
+    "comparativa_completa": {
+        "LinearRegression": {
+            "R2": 0.627678135777475,
+            "MAE": 0.2234105747806444
+        },
+        "RandomForest": {
+            "R2": 0.8488010204822306,
+            "MAE": 0.0792330056798653
+        }
+    }
+}
