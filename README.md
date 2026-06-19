@@ -1,18 +1,18 @@
-# Proyecto IA
-# Proyecto: Agente de IA con Mistral
+# Sistema de Agentes de IA - Predicción y Consulta de Transfermarkt
 
-## Bitácora de cambios
-- **Commit [25/05]:** Normalización del dataset `sales_data_sample.csv`.
-    - Se eliminaron valores nulos en columnas geográficas y se reemplazaron por 'N/A'.
-    - Se estandarizó el formato de la columna `ORDERDATE` a datetime.
-    - Se generó el archivo `ventas.csv` como base de conocimiento limpia para el modelo.
-    
-- Commit [25/05]: Implementación de Agente Inteligente con Mistral Small y LangChain.
-    - Se configuró el pandas_dataframe_agent con tool-calling para interacción precisa.
-    - Se definió un prefix_prompt con contexto de negocio para asegurar la integridad matemática en las consultas.
-    - Se añadieron pruebas automatizadas para verificar el razonamiento lógico del modelo sobre el dataset.
+Este proyecto implementa un pipeline completo de Inteligencia Artificial compuesto por tres agentes especializados para procesar datos de futbolistas, entrenar modelos predictivos de valor de mercado y ofrecer una interfaz de consulta generativa.
 
-- Commit [25/05]: Implementación de Agente Inteligente con Mistral Small y LangChain.
-    - Se configuró el pandas_dataframe_agent con tool-calling para consultas precisas sobre el corpus.
-    - Se integró un prefix_prompt con contexto de negocio para asegurar resultados matemáticos exactos.
-    - Se desarrollaron pruebas automatizadas de razonamiento lógico sobre el dataset ventas.csv.
+## Estructura del Sistema
+
+El proyecto está dividido en 3 agentes autónomos dentro de `football_players.py`:
+
+1. **Agente 1 (Normalizador):** Se encarga de la carga del dataset (`players.csv`), la limpieza de datos, la imputación de valores nulos (usando medianas y categorías por defecto), el escalado con `StandardScaler` y la codificación One-Hot para exportar un archivo limpio (`players_clean.csv`).
+2. **Agente 2 (Entrenador):** Divide los datos en conjuntos de entrenamiento y prueba, entrena modelos de Regresión Lineal y Random Forest, evalúa las métricas ($R^2$ y MAE) y exporta un informe con el modelo ganador en `resultados_entrenamiento.json`.
+3. **Agente 3 (Comunicador):** Consolida la memoria de los agentes previos e inicia una interfaz interactiva en la consola que se conecta con la API de **Gemini 2.5 Flash** para responder preguntas del usuario de forma profesional y contextualizada.
+
+## Requisitos e Instalación
+
+Para ejecutar este proyecto, necesitas instalar las siguientes librerías de Python:
+
+```bash
+pip install pandas numpy scikit-learn requests
